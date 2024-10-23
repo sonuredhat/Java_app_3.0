@@ -79,7 +79,7 @@ pipeline{
             steps{
                 script {
                     // Find all matching files (e.g., JAR files)
-                    def jarFiles = findFile("/var/lib/jenkins/workspace/javaapp/target/", "*.jar")
+                    def jarFiles = findFile("target/", "*.jar")
                     if (jarFiles && jarFiles.size() > 0) {
                         // Fetch credentials and upload each file
                         withCredentials([string(credentialsId: 'jfrog-api', variable: 'jfrogCredentials')]) {
