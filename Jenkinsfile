@@ -11,6 +11,7 @@ pipeline{
         string(name: 'ImageName', description: "name of the docker build", defaultValue: 'javapp')
         string(name: 'ImageTag', description: "tag of the docker build", defaultValue: 'v1')
         string(name: 'DockerHubUser', description: "name of the Application", defaultValue: 'praveensingam1994')
+        string (name: 'artifactPath', description: "artifact path Name", defaultValue: "https://sonujfrog.jfrog.io/artifactory/javaaap-libs-release-local/")
     }
 
     stages{
@@ -71,6 +72,30 @@ pipeline{
                    
                    mvnBuild()
                }
+            }
+        }
+        stage('Artifact push : Jfrog'){
+            when { expression { params.action == 'create'}}
+            steps{
+                script {
+                    // Find all matching files (e.g., JAR files)
+                    def jarFiles = findFile("/var/lib/jenkins/workspace/javaapp/target/", "*.jar")
+                    if (jarFiles && jarFiles.size() > 0) {
+                        // Fetch credentials and upload each file
+                        withCredentials([string(credentialsId: 'jfrog-api', variable: 'jfrogCredentials')]) {
+                            jarFiles.each { jarFile ->
+                                // def artifactPath = "${env.ARTIFACTORY_URL}${jarFile.name}"
+                                uploadArtifactJfrog("${artifactPath}", jarFile , jfrogCredentials)
+                            }
+                        }
+                    } else {
+                        error("No matching files found in the directory!")
+                    }
+                // script{
+                //     def jfrogCredentials = 'jfrog-api'
+                //     uploadArtifactJfrog("${artifactPath}", "${jarFile}", jfrogCredentials)
+
+                }
             }
         }
         stage('Docker Image Build'){
